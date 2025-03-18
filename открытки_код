@@ -1,6 +1,8 @@
 import pandas as pd
 df = pd.read_csv('/content/[2024.12.23] Пишу тебе. Корпус (база 1-5, 7-9, 12-13).xlsx - 2024.12.23 Пишу тебе. Корпус (б.csv')
+
 df.size # 1588854
+
 tag_1 = df.loc[df['Тег_1'] == 'Просьба']
 tag_2 = df.loc[df['Тег_2'] == 'Просьба']
 tag_3 = df.loc[df['Тег_3'] == 'Просьба']
@@ -8,6 +10,7 @@ tag_4 = df.loc[df['Тег_4'] == 'Просьба']
 tag_5 = df.loc[df['Тег_5'] == 'Просьба']
 tag_6 = df.loc[df['Тег_6'] == 'Просьба']
 tag_7 = df.loc[df['Тег_7'] == 'Просьба']
+
 prosba_df = pd.concat([tag_1, tag_2, tag_3, tag_4, tag_5, tag_6, tag_7])
 prosba_df = prosba_df.loc[df['Страна (куда)'] == 'Российская Империя']
 text_data = prosba_df['Текст открытки']
@@ -22,6 +25,32 @@ text_data.to_csv('text_data_RE.csv')
 
 Проблема: часто выбранные лексемы не встречаются в текстах, а просьба выражается иначе
 Выход: провести частеречную разметку и поискать по императивам
+
+import spacy
+from spacy.lang.ru.examples import sentences
+from spacy.cli.download import download
+download(model="ru_core_news_sm")
+nlp = spacy.load('ru_core_news_sm')
+
+doc = nlp(text)
+lemmas = [token.lemma_ for token in doc]
+
+pos_annotation = []
+for token in doc:
+  pos_annotation.append((token, token.pos_))
+
+for i in range(30):
+  print(pos_annotation)
+
+imperative_verbs = []
+
+for token in doc:
+  if token.pos_ == 'VERB' and "Mood=Imp" in token.morph:
+    imperative_verbs.append(token)
+
+with open('imperative.txt', 'w+') as f:
+  for verb in imperative_verbs:
+    f.write(f'{verb}\n')
 
 "Дорогая Ляля! Сегодня приехал в Тифлис. Прошу тебя учись хорошо, будь послушной и вежливой, тогда и к тебе будут хорошо относиться. Пиши подробно, как в гимназии, как новые подружки и проч. Пройдешь во 2-й класс, то возьму в Тифлис. Целую тебя твой папа [?Вениам]  17 январь 1915 Тифлис"
 
